@@ -63,7 +63,6 @@ TELEGRAM_CHAT_ID = "7683631230"
 def enviar_relatorio_telegram():
     data_hoje = datetime.now().strftime('%d/%m/%Y')
     
-    # Puxa dados de mercado rápido para o texto do Telegram
     dxy_p, dxy_v = puxar_metricas("DX-Y.NYB")
     sp_p, sp_v = puxar_metricas("ES=F")
     
@@ -92,8 +91,8 @@ def enviar_relatorio_telegram():
 
 _Bons trades! Gerencie seu risco._ ⚡
 """
-    # URL 100% corrigida e montada de forma explícita com F-String
-    url = f"https://telegram.org{TELEGRAM_TOKEN}/sendMessage"
+    # URL construída de forma direta e sem concatenação de variáveis de string
+    url = "https://telegram.org"
     payload = {"chat_id": TELEGRAM_CHAT_ID, "text": mensagem, "parse_mode": "Markdown"}
     
     try:
@@ -182,4 +181,4 @@ with col_direita:
     st.metric("Ouro Futuro", f"US$ {p:.2f}", f"{v:.2f}%")
 
 st.markdown("---")
-st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são basedas em desvios estatísticos de volatilidade e não garantem o comportamento real do mercado.")
+st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são baseadas em desvios estatísticos de volatilidade e não garantem o comportamento real do mercado.")
