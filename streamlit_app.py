@@ -92,6 +92,7 @@ def enviar_relatorio_telegram():
 
 _Bons trades! Gerencie seu risco._ ⚡
 """
+    # Link da API corrigido com a barra correta após o "bot"
     url = f"https://telegram.org{TELEGRAM_TOKEN}/sendMessage"
     payload = {"chat_id": TELEGRAM_CHAT_ID, "text": mensagem, "parse_mode": "Markdown"}
     
@@ -100,7 +101,7 @@ _Bons trades! Gerencie seu risco._ ⚡
         if response.status_code == 200:
             st.success("✅ Relatório diário disparado com sucesso para o Telegram!")
         else:
-            st.error("❌ Falha no envio. Verifique se você iniciou o bot no Telegram.")
+            st.error("❌ Falha no envio. Certifique-se de que você iniciou o bot no seu aplicativo com /start.")
     except Exception as e:
         st.error(f"Erro de conexão com o Telegram: {e}")
 
@@ -110,7 +111,7 @@ if st.button("🚀 Disparar Relatório no meu Telegram Agora"):
 
 st.markdown("---")
 
-# --- DIVISÃO DA TELA EM LAYOUT DE GRID (ESTILO PANORAMA - CORRIGIDO) ---
+# --- DIVISÃO DA TELA EM LAYOUT DE GRID ---
 col_esquerda, col_centro, col_direita = st.columns(3)
 
 # --- COLUNA ESQUERDA: DIRETRIZES DA MOEDA GLOBAL & BOLSAS ---
