@@ -1,6 +1,8 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+import requests
+from datetime import datetime
 
 # 1. Configurações Iniciais da Página em Modo Amplo
 st.set_page_config(page_title="Panorama Quant - WDO", layout="wide", page_icon="📊")
@@ -42,7 +44,6 @@ try:
     fechamento_raw = historico_dolar['Close'].iloc[-1]
     fair_value = float(fechamento_raw * 1000)
     
-    # Cálculo estatístico do ATR (Média da volatilidade real dos últimos 20 dias)
     historico_dolar['TrueRange'] = historico_dolar['High'] - historico_dolar['Low']
     atr_atual = float(historico_dolar['TrueRange'].tail(20).mean() * 1000)
 except:
@@ -55,8 +56,62 @@ minima_provavel = fair_value - (atr_atual * desvio_padrao)
 vah = fair_value + (atr_atual * 0.5)
 val = fair_value - (atr_atual * 0.5)
 
+# --- CONFIGURAÇÃO E ENVIO DO TELEGRAM (DADOS CONFIGURADOS) ---
+TELEGRAM_TOKEN = "8973889827:AAH9gd43aRXlxDj8F7P5SKDa2-9TZvK8Y5s"
+TELEGRAM_CHAT_ID = "7683631230"
+
+def enviar_relatorio_telegram():
+    data_hoje = datetime.now().strftime('%d/%m/%Y')
+    
+    # Puxa dados de mercado rápido para o texto do Telegram
+    dxy_p, dxy_v = puxar_metricas("DX-Y.NYB")
+    sp_p, sp_v = puxar_metricas("ES=F")
+    
+    mensagem = f"""
+🤖 *AGENTE QUANT: BOM DIA MICHELL!* 📊
+*Data de Referência:* {data_hoje}
+
+*Contexto Rápido:*
+• DXY: {dxy_p:.2f} ({dxy_v:+.2f}%)
+• S&P 500 Fut: {sp_p:.1f} ({sp_v:+.2f}%)
+
+*🎯 Projeções de Volatilidade (WDO):*
+• *Máxima Provável:* {maxima_provavel:.1f}
+• *Preço Justo (FV):* {fair_value:.1f}
+• *Mínima Provável:* {minima_provavel:.1f}
+
+*📍 Regiões de Liquidez (Value Area):*
+• Value Area High (VAH): {vah:.1f}
+• Value Area Low (VAL): {val:.1f}
+
+*📊 Desvios de Fibo/Percentuais:*
+• R2 (+1.0%): {fair_value * 1.010:.1f}
+• R1 (+0.5%): {fair_value * 1.005:.1f}
+• S1 (-0.5%): {fair_value * 0.995:.1f}
+• S2 (-1.0%): {fair_value * 0.990:.1f}
+
+_Bons trades! Gerencie seu risco._ ⚡
+"""
+    url = f"https://telegram.org{TELEGRAM_TOKEN}/sendMessage"
+    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": mensagem, "parse_mode": "Markdown"}
+    
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            st.success("✅ Relatório diário disparado com sucesso para o Telegram!")
+        else:
+            st.error("❌ Falha no envio. Verifique se você iniciou o bot no Telegram.")
+    except Exception as e:
+        st.error(f"Erro de conexão com o Telegram: {e}")
+
+# Botão físico no cabeçalho do site para teste ou gatilho rápido
+if st.button("🚀 Disparar Relatório no meu Telegram Agora"):
+    enviar_relatorio_telegram()
+
+st.markdown("---")
+
 # --- DIVISÃO DA TELA EM LAYOUT DE GRID (ESTILO PANORAMA) ---
-col_esquerda, col_centro, col_direita = st.columns([1, 2, 1])
+col_esquerda, col_centro, col_direita = st.columns()
 
 # --- COLUNA ESQUERDA: DIRETRIZES DA MOEDA GLOBAL & BOLSAS ---
 with col_esquerda:
@@ -76,23 +131,20 @@ with col_esquerda:
     p, v = puxar_metricas("NQ=F")
     st.metric("NASDAQ Futuro", f"{p:.1f}", f"{v:.2f}%")
 
-# --- COLUNA CENTRAL: O MAIS IMPORTANTE PARA VOCÊ OPERAR O WDO ---
+# --- COLUNA CENTRAL: O MAIS IMPORTANTE PARA OPERAR O WDO ---
 with col_centro:
     st.markdown("<h2 style='text-align: center; color: #FF4B4B;'>🎯 MODELO OPERACIONAL WDO</h2>", unsafe_allow_html=True)
     
-    # Box com as 3 métricas principais de ancoragem
     c1, c2, c3 = st.columns(3)
     c1.metric("📉 Mínima Provável (Suporte)", f"{minima_provavel:.1f}")
     c2.metric("⚪ Fair Value (Preço Justo)", f"{fair_value:.1f}")
     c3.metric("📈 Máxima Provável (Resistência)", f"{maxima_provavel:.1f}")
     
-    # Identificação rápida de Value Area (Zonas de briga)
     st.markdown("### 📍 Regiões de Liquidez (Value Area)")
     col_v1, col_v2 = st.columns(2)
     col_v1.info(f"**Value Area High (VAH):** {vah:.1f} pontos")
     col_v2.info(f"**Value Area Low (VAL):** {val:.1f} pontos")
     
-    # Grade de variação percentual para colocação de ordens limite (Scalping)
     st.markdown("### 📊 Níveis Operacionais Relevantes")
     grid_dados = {
         "Nível Técnico": [
