@@ -30,19 +30,47 @@ for nome, ticker in tickers.items():
     except:
         st.sidebar.metric(label=nome, value="Indisponível")
 
-# 2. Entrada de Parâmetros do Usuário para o Cálculo do WDO
+# 2. AUTOMATIZAÇÃO QUANTITATIVA DO CÂMBIO (Puxando dados do dólar comercial)
+# Nota: yfinance usa BRL=X como proxy do dólar comercial à vista
+@st.cache_data(ttl=3600)  # Guarda os dados por 1 hora para não travar o site
+def calcular_dados_cambio():
+    try:
+        # Puxa os últimos 30 dias do dólar para calcular a volatilidade real
+        historico_dolar = yf.Ticker("BRL=X").history(period="1mo")
+        
+        # O último fechamento disponível serve como nosso Ajuste/Preço Base de referência
+        ajuste_auto = historico_dolar['Close'].iloc[-1]
+        
+        # Cálculo automático da volatilidade real (Máxima - Mínima dos últimos 20 dias)
+        historico_dolar['TrueRange'] = historico_dolar['High'] - historico_dolar['Low']
+        atr_auto = historico_dolar['TrueRange'].tail(20).mean()
+        
+        # Ajustando a escala do ATR para pontos do minidólar
+        atr_pontos = atr_auto * 1000
+        if atr_pontos < 10 or atr_pontos > 150:  # Trava de segurança estatística
+            atr_pontos = 48.5
+            
+        return float(ajuste_auto * 1000), float(atr_pontos)
+    except:
+        # Valores padrão de segurança caso a API falhe
+        return 5100.0, 48.5
+
+# Executa a função automática
+ajuste_calculado, atr_calculado = calcular_dados_cambio()
+
+# 3. Painel de Parâmetros (Agora Automáticos com opção de ajuste manual se quiser)
 st.header("🎯 Parâmetros de Volatilidade do Dia")
 col_input1, col_input2, col_input3 = st.columns(3)
 
 with col_input1:
-    ajuste_anterior = st.number_input("Preço de Ajuste Anterior (WDO):", value=5100.0, step=0.5)
+    ajuste_anterior = st.number_input("Preço de Referência Anterior (Automático):", value=ajuste_calculated, step=0.5)
 with col_input2:
-    atr_atual = st.number_input("ATR atual (Volatilidade Média de 20 períodos):", value=48.5, step=0.5)
+    atr_atual = st.number_input("ATR Calculado (Volatilidade em Pontos):", value=atr_calculado, step=0.5)
 with col_input3:
-    desvio = st.slider("Fator de Desvio Estatístico:", min_value=0.5, max_value=2.0, value=1.2, step=0.1)
+    desvio = st.slider("Fator de Desvio Estatístico:", min_value=0.5, max_value=2.0, value=1.1, step=0.1)
 
-# 3. Cálculos de Inteligência Quantitativa
-fair_value = ajuste_anterior  # Simplificação baseada em paridade de juros/ajuste
+# 4. Cálculos Matemáticos de Volatilidade
+fair_value =大j_anterior  
 maxima_provavel = fair_value + (atr_atual * desvio)
 minima_provavel = fair_value - (atr_atual * desvio)
 vah = fair_value + (atr_atual * 0.5)
@@ -54,11 +82,42 @@ c1.metric("📉 Mínima Provável (Suporte)", f"{minima_provavel:.1f}")
 c2.metric("⚪ Fair Value (Preço Justo)", f"{fair_value:.1f}")
 c3.metric("📈 Máxima Provável (Resistência)", f"{maxima_provavel:.1f}")
 
-# 4. Zonas de Liquidez do Volume Profile Provedor
+# 5. Zonas de Liquidez do Volume Profile Provedor
 st.subheader("📍 Zonas de Liquidez e Value Area")
 col_z1, col_z2 = st.columns(2)
 col_z1.info(f"Value Area High (VAH): {vah:.1f} pontos")
 col_z2.info(f"Value Area Low (VAL): {val:.1f} pontos")
+
+# 6. Grade de Pontos de Variação Percentual
+st.subheader("📊 Níveis Operacionais Relevantes (Variação Percentual)")
+
+grid_dados = {
+    "Nível Operacional": [
+        "Resistência Máxima (+1.5%)", 
+        "Resistência 2 (+1.0%)", 
+        "Resistência 1 (+0.5%)", 
+        "Ajuste / Preço Justo (0.0%)", 
+        "Suporte 1 (-0.5%)", 
+        "Suporte 2 (-1.0%)", 
+        "Suporte Máximo (-1.5%)"
+    ],
+    "Preço Calculado (WDO)": [
+        round(fair_value * 1.015, 1),
+        round(fair_value * 1.010, 1),
+        round(fair_value * 1.005, 1),
+        round(fair_value, 1),
+        round(fair_value * 0.995, 1),
+        round(fair_value * 0.990, 1),
+        round(fair_value * 0.985, 1)
+    ]
+}
+
+df_grid = pd.DataFrame(grid_dados)
+st.table(df_grid)
+
+st.markdown("---")
+st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são estritamente probabilísticas baseadas em desvios de volatilidade e não garantem o comportamento real do mercado.")
+
 
 st.markdown("---")
 st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são estritamente probabilísticas baseadas em desvios de volatilidade e não garantem o comportamento real do mercado.")
