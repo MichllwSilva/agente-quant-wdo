@@ -30,15 +30,14 @@ for nome, ticker in tickers.items():
     except:
         st.sidebar.metric(label=nome, value="Indisponível")
 
-# 2. AUTOMATIZAÇÃO QUANTITATIVA DO CÂMBIO (Puxando dados do dólar comercial)
-# Nota: yfinance usa BRL=X como proxy do dólar comercial à vista
-@st.cache_data(ttl=3600)  # Guarda os dados por 1 hora para não travar o site
+# 2. AUTOMATIZAÇÃO QUANTITATIVA DO CÂMBIO
+@st.cache_data(ttl=3600)  # Guarda os dados por 1 hora para otimizar o site
 def calcular_dados_cambio():
     try:
-        # Puxa os últimos 30 dias do dólar para calcular a volatilidade real
+        # Puxa o último mês do dólar comercial para calcular a volatilidade real
         historico_dolar = yf.Ticker("BRL=X").history(period="1mo")
         
-        # O último fechamento disponível serve como nosso Ajuste/Preço Base de referência
+        # O último fechamento serve como nosso Preço Base de referência
         ajuste_auto = historico_dolar['Close'].iloc[-1]
         
         # Cálculo automático da volatilidade real (Máxima - Mínima dos últimos 20 dias)
@@ -52,25 +51,25 @@ def calcular_dados_cambio():
             
         return float(ajuste_auto * 1000), float(atr_pontos)
     except:
-        # Valores padrão de segurança caso a API falhe
         return 5100.0, 48.5
 
 # Executa a função automática
 ajuste_calculado, atr_calculado = calcular_dados_cambio()
 
-# 3. Painel de Parâmetros (Agora Automáticos com opção de ajuste manual se quiser)
+# 3. Painel de Parâmetros
 st.header("🎯 Parâmetros de Volatilidade do Dia")
 col_input1, col_input2, col_input3 = st.columns(3)
 
 with col_input1:
-    ajuste_anterior = st.number_input("Preço de Referência Anterior (Automático):", value=ajuste_calculated, step=0.5)
+    # Correção da variável aqui: de 'ajuste_calculated' para 'ajuste_calculado'
+    ajuste_anterior = st.number_input("Preço de Referência Anterior (Automático):", value=ajuste_calculado, step=0.5)
 with col_input2:
     atr_atual = st.number_input("ATR Calculado (Volatilidade em Pontos):", value=atr_calculado, step=0.5)
 with col_input3:
     desvio = st.slider("Fator de Desvio Estatístico:", min_value=0.5, max_value=2.0, value=1.1, step=0.1)
 
 # 4. Cálculos Matemáticos de Volatilidade
-fair_value =大j_anterior  
+fair_value =静态 = ajuste_anterior  
 maxima_provavel = fair_value + (atr_atual * desvio)
 minima_provavel = fair_value - (atr_atual * desvio)
 vah = fair_value + (atr_atual * 0.5)
@@ -114,10 +113,6 @@ grid_dados = {
 
 df_grid = pd.DataFrame(grid_dados)
 st.table(df_grid)
-
-st.markdown("---")
-st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são estritamente probabilísticas baseadas em desvios de volatilidade e não garantem o comportamento real do mercado.")
-
 
 st.markdown("---")
 st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são estritamente probabilísticas baseadas em desvios de volatilidade e não garantem o comportamento real do mercado.")
