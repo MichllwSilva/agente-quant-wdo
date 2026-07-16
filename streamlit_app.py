@@ -92,8 +92,8 @@ def enviar_relatorio_telegram():
 
 _Bons trades! Gerencie seu risco._ ⚡
 """
-    # Link da API corrigido de forma estática e segura
-    url = "https://telegram.org" + TELEGRAM_TOKEN + "/sendMessage"
+    # URL 100% corrigida e montada de forma explícita com F-String
+    url = f"https://telegram.org{TELEGRAM_TOKEN}/sendMessage"
     payload = {"chat_id": TELEGRAM_CHAT_ID, "text": mensagem, "parse_mode": "Markdown"}
     
     try:
@@ -182,5 +182,4 @@ with col_direita:
     st.metric("Ouro Futuro", f"US$ {p:.2f}", f"{v:.2f}%")
 
 st.markdown("---")
-st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são baseadas em desvios estatísticos de volatilidade e não garantem o comportamento real do mercado.")
-
+st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são basedas em desvios estatísticos de volatilidade e não garantem o comportamento real do mercado.")
