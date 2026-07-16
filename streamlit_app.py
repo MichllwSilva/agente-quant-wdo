@@ -56,7 +56,7 @@ minima_provavel = fair_value - (atr_atual * desvio_padrao)
 vah = fair_value + (atr_atual * 0.5)
 val = fair_value - (atr_atual * 0.5)
 
-# --- CONFIGURAÇÃO E ENVIO DO TELEGRAM (DADOS CONFIGURADOS) ---
+# --- CONFIGURAÇÃO E ENVIO DO TELEGRAM ---
 TELEGRAM_TOKEN = "8973889827:AAH9gd43aRXlxDj8F7P5SKDa2-9TZvK8Y5s"
 TELEGRAM_CHAT_ID = "7683631230"
 
@@ -84,7 +84,7 @@ def enviar_relatorio_telegram():
 • Value Area High (VAH): {vah:.1f}
 • Value Area Low (VAL): {val:.1f}
 
-*📊 Desvios de Fibo/Percentuais:*
+*📊 Desvios de Percentuais:*
 • R2 (+1.0%): {fair_value * 1.010:.1f}
 • R1 (+0.5%): {fair_value * 1.005:.1f}
 • S1 (-0.5%): {fair_value * 0.995:.1f}
@@ -110,8 +110,8 @@ if st.button("🚀 Disparar Relatório no meu Telegram Agora"):
 
 st.markdown("---")
 
-# --- DIVISÃO DA TELA EM LAYOUT DE GRID (ESTILO PANORAMA) ---
-col_esquerda, col_centro, col_direita = st.columns()
+# --- DIVISÃO DA TELA EM LAYOUT DE GRID (ESTILO PANORAMA - CORRIGIDO) ---
+col_esquerda, col_centro, col_direita = st.columns(3)
 
 # --- COLUNA ESQUERDA: DIRETRIZES DA MOEDA GLOBAL & BOLSAS ---
 with col_esquerda:
@@ -136,9 +136,9 @@ with col_centro:
     st.markdown("<h2 style='text-align: center; color: #FF4B4B;'>🎯 MODELO OPERACIONAL WDO</h2>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns(3)
-    c1.metric("📉 Mínima Provável (Suporte)", f"{minima_provavel:.1f}")
-    c2.metric("⚪ Fair Value (Preço Justo)", f"{fair_value:.1f}")
-    c3.metric("📈 Máxima Provável (Resistência)", f"{maxima_provavel:.1f}")
+    c1.metric("📉 Mínima Provável", f"{minima_provavel:.1f}")
+    c2.metric("⚪ Fair Value", f"{fair_value:.1f}")
+    c3.metric("📈 Máxima Provável", f"{maxima_provavel:.1f}")
     
     st.markdown("### 📍 Regiões de Liquidez (Value Area)")
     col_v1, col_v2 = st.columns(2)
