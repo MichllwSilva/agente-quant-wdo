@@ -92,8 +92,8 @@ def enviar_relatorio_telegram():
 
 _Bons trades! Gerencie seu risco._ ⚡
 """
-    # Link da API corrigido com a barra correta após o "bot"
-    url = f"https://telegram.org{TELEGRAM_TOKEN}/sendMessage"
+    # Link da API corrigido de forma estática e segura
+    url = "https://telegram.org" + TELEGRAM_TOKEN + "/sendMessage"
     payload = {"chat_id": TELEGRAM_CHAT_ID, "text": mensagem, "parse_mode": "Markdown"}
     
     try:
@@ -116,7 +116,7 @@ col_esquerda, col_centro, col_direita = st.columns(3)
 
 # --- COLUNA ESQUERDA: DIRETRIZES DA MOEDA GLOBAL & BOLSAS ---
 with col_esquerda:
-    st.subheader("🇺🇸 DXY & Paridades")
+    st.subheader("🇺🇸 US DXY & Paridades")
     p, v = puxar_metricas("DX-Y.NYB")
     st.metric("Dollar Index (DXY)", f"{p:.2f}", f"{v:.2f}%")
     p, v = puxar_metricas("EURUSD=X")
@@ -183,3 +183,4 @@ with col_direita:
 
 st.markdown("---")
 st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são baseadas em desvios estatísticos de volatilidade e não garantem o comportamento real do mercado.")
+
