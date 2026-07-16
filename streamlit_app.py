@@ -31,7 +31,7 @@ for nome, ticker in tickers.items():
         st.sidebar.metric(label=nome, value="Indisponível")
 
 # 2. AUTOMATIZAÇÃO QUANTITATIVA DO CÂMBIO
-@st.cache_data(ttl=3600)  # Guarda os dados por 1 hora para otimizar o site
+@st.cache_data(ttl=3600)  # Atualiza os dados de hora em hora
 def calcular_dados_cambio():
     try:
         # Puxa o último mês do dólar comercial para calcular a volatilidade real
@@ -53,25 +53,24 @@ def calcular_dados_cambio():
     except:
         return 5100.0, 48.5
 
-# Executa a função automática
-ajuste_calculado, atr_calculado = calcular_dados_cambio()
+# Executa o algoritmo matemático
+fair_value, atr_atual = calcular_dados_cambio()
+desvio_estatistico = 1.1
 
-# 3. Painel de Parâmetros
-st.header("🎯 Parâmetros de Volatilidade do Dia")
-col_input1, col_input2, col_input3 = st.columns(3)
+# 3. Painel de Parâmetros de Volatilidade do Dia (Apenas Informativos, Sem Digitação)
+st.header("🎯 Parâmetros Calculados Automaticamente")
+col_info1, col_info2, col_info3 = st.columns(3)
 
-with col_input1:
-    # Correção da variável aqui: de 'ajuste_calculated' para 'ajuste_calculado'
-    ajuste_anterior = st.number_input("Preço de Referência Anterior (Automático):", value=ajuste_calculado, step=0.5)
-with col_input2:
-    atr_atual = st.number_input("ATR Calculado (Volatilidade em Pontos):", value=atr_calculado, step=0.5)
-with col_input3:
-    desvio = st.slider("Fator de Desvio Estatístico:", min_value=0.5, max_value=2.0, value=1.1, step=0.1)
+with col_info1:
+    st.metric("Preço de Referência Base", f"{fair_value:.1f}")
+with col_info2:
+    st.metric("Volatilidade ATR Estimada", f"{atr_atual:.1f} pontos")
+with col_info3:
+    st.metric("Fator de Desvio Aplicado", f"{desvio_estatistico}")
 
 # 4. Cálculos Matemáticos de Volatilidade
-fair_value =静态 = ajuste_anterior  
-maxima_provavel = fair_value + (atr_atual * desvio)
-minima_provavel = fair_value - (atr_atual * desvio)
+maxima_provavel = fair_value + (atr_atual * desvio_estatistico)
+minima_provavel = fair_value - (atr_atual * desvio_estatistico)
 vah = fair_value + (atr_atual * 0.5)
 val = fair_value - (atr_atual * 0.5)
 
