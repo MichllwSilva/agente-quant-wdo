@@ -22,7 +22,7 @@ st.markdown("""
 st.title("🎛️ Panorama Quantitativo de Abertura — Foco Mini Dólar")
 st.caption("Alinhamento estratégico baseado na Rotina de Abertura e Paridades de Volatilidade Globais")
 
-# --- FUNÇÃO DE COLETA AUTOMÁTICA DE ATIVOS ---
+# --- FUNÇÃO DE COLETA AUTOMÁTICA DE ATIVOS (1 EM 1 MINUTO) ---
 @st.cache_data(ttl=60)
 def puxar_metricas(ticker):
     try:
@@ -38,19 +38,25 @@ def puxar_metricas(ticker):
     except:
         return 0.0, 0.0
 
-# --- ALGORITMO QUANTITATIVO DO MINI DÓLAR (CENTRAL) ---
-try:
-    historico_dolar = yf.Ticker("BRL=X").history(period="1mo")
-    fechamento_raw = historico_dolar['Close'].iloc[-1]
-    fair_value = float(fechamento_raw * 1000)
-    
-    historico_dolar['TrueRange'] = historico_dolar['High'] - historico_dolar['Low']
-    atr_atual = float(historico_dolar['TrueRange'].tail(20).mean() * 1000)
-except:
-    fair_value, atr_atual = 5100.0, 48.5
+# --- AUTOMATIZAÇÃO QUANTITATIVA (ATUALIZA DE 30 EM 30 MINUTOS - CLAVADO PARA AS 09:50) ---
+@st.cache_data(ttl=1800)  # Alterado de 3600 para 1800 segundos (30 minutos)
+def calcular_dados_cambio():
+    try:
+        historico_dolar = yf.Ticker("BRL=X").history(period="1mo")
+        fechamento_raw = historico_dolar['Close'].iloc[-1]
+        ajuste_auto = float(fechamento_raw * 1000)
+        
+        historico_dolar['TrueRange'] = historico_dolar['High'] - historico_dolar['Low']
+        atr_auto = float(historico_dolar['TrueRange'].tail(20).mean() * 1000)
+        return ajuste_auto, atr_auto
+    except:
+        return 5100.0, 48.5
 
-# Parâmetros matemáticos fixados da volatilidade
+# Executa o algoritmo matemático do câmbio
+fair_value, atr_atual = calcular_dados_cambio()
 desvio_padrao = 1.1
+
+# Parâmetros matemáticos da volatilidade
 maxima_provavel = fair_value + (atr_atual * desvio_padrao)
 minima_provavel = fair_value - (atr_atual * desvio_padrao)
 vah = fair_value + (atr_atual * 0.5)
@@ -91,8 +97,7 @@ def enviar_relatorio_telegram():
 
 _Bons trades! Gerencie seu risco._ ⚡
 """
-    # URL construída de forma direta e sem concatenação de variáveis de string
-    url = "https://telegram.org"
+    url = f"https://telegram.org{TELEGRAM_TOKEN}/sendMessage"
     payload = {"chat_id": TELEGRAM_CHAT_ID, "text": mensagem, "parse_mode": "Markdown"}
     
     try:
@@ -182,3 +187,4 @@ with col_direita:
 
 st.markdown("---")
 st.warning("⚠️ **Aviso de Risco:** Todas as estimativas exibidas nesta ferramenta são baseadas em desvios estatísticos de volatilidade e não garantem o comportamento real do mercado.")
+
